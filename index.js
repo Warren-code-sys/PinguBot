@@ -1,23 +1,46 @@
 require('dotenv').config();
 
-// Polyfill pour ReadableStream si nécessaire (compatibilité Replit)
+// Polyfills robustes pour Replit
 if (typeof globalThis.ReadableStream === 'undefined') {
-    const { ReadableStream } = require('stream/web');
-    globalThis.ReadableStream = ReadableStream;
+    try {
+        const { ReadableStream } = require('stream/web');
+        globalThis.ReadableStream = ReadableStream;
+    } catch (e) {
+        // Fallback si stream/web n'existe pas
+        globalThis.ReadableStream = class ReadableStream {};
+    }
+}
+
+// Autres polyfills nécessaires
+if (typeof globalThis.WritableStream === 'undefined') {
+    try {
+        const { WritableStream } = require('stream/web');
+        globalThis.WritableStream = WritableStream;
+    } catch (e) {
+        globalThis.WritableStream = class WritableStream {};
+    }
+}
+
+if (typeof globalThis.TransformStream === 'undefined') {
+    try {
+        const { TransformStream } = require('stream/web');
+        globalThis.TransformStream = TransformStream;
+    } catch (e) {
+        globalThis.TransformStream = class TransformStream {};
+    }
 }
 
 // Démarrer le serveur web pour Replit
 require('./server');
 
-const { Client, Intents, SlashCommandBuilder } = require('discord.js');
+const { Client, GatewayIntentBits, SlashCommandBuilder, Routes, EmbedBuilder } = require('discord.js');
 const { REST } = require('@discordjs/rest');
-const { Routes } = require('discord-api-types/v9');
 
 // Configuration du client Discord
 const client = new Client({
     intents: [
-        Intents.FLAGS.GUILDS,
-        Intents.FLAGS.GUILD_MESSAGES
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages
     ]
 });
 
@@ -62,7 +85,7 @@ const callCommand = new SlashCommandBuilder()
 async function deployCommands() {
     const commands = [callCommand];
     
-    const rest = new REST({ version: '9' }).setToken(process.env.TOKEN);
+    const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
     
     try {
         console.log('🔄 Enregistrement des commandes slash...');
@@ -88,7 +111,7 @@ client.once('ready', async () => {
 function getTradeStyle(direction) {
     const isLong = direction.toLowerCase() === 'long';
     return {
-        color: isLong ? '#00FF88' : '#FF4444',
+        color: isLong ? 0x00FF88 : 0xFF4444,
         emoji: isLong ? '📈' : '📉',
         directionEmoji: isLong ? '🟢' : '🔴',
         trend: isLong ? '⬆️' : '⬇️'
@@ -102,7 +125,7 @@ function formatTakeProfit(tp) {
 
 // Gestion des interactions (commandes slash)
 client.on('interactionCreate', async interaction => {
-    if (!interaction.isCommand()) return;
+    if (!interaction.isChatInputCommand()) return;
     
     if (interaction.commandName === 'call') {
         // Vérifier si l'interaction n'a pas expiré
@@ -125,11 +148,11 @@ client.on('interactionCreate', async interaction => {
             const style = getTradeStyle(direction);
             
             // Embed principal avec le design sophistiqué
-            const mainEmbed = {
-                title: `${style.emoji} **TRADE SIGNAL** ${style.emoji}`,
-                description: `## **${symbol.toUpperCase()}** ${style.directionEmoji} **${direction.toUpperCase()}** ${style.trend}`,
-                color: parseInt(style.color.slice(1), 16),
-                fields: [
+            const mainEmbed = new EmbedBuilder()
+                .setTitle(`${style.emoji} **TRADE SIGNAL** ${style.emoji}`)
+                .setDescription(`## **${symbol.toUpperCase()}** ${style.directionEmoji} **${direction.toUpperCase()}** ${style.trend}`)
+                .setColor(style.color)
+                .addFields([
                     {
                         name: '🎯 **Entry Point**',
                         value: `\`\`\`fix\n${entry}\`\`\``,
@@ -145,40 +168,38 @@ client.on('interactionCreate', async interaction => {
                         value: `\`\`\`css\n${formatTakeProfit(tp)}\`\`\``,
                         inline: false
                     }
-                ],
-                footer: { 
-                    text: `📊 Published by ${interaction.user.tag} • ${new Date().toLocaleString('fr-FR')}`,
-                    icon_url: interaction.user.displayAvatarURL()
-                },
-                timestamp: new Date().toISOString()
-            };
+                ])
+                .setFooter({ 
+                    text: `📊 Published by ${interaction.user.displayName} • ${new Date().toLocaleString('fr-FR')}`,
+                    iconURL: interaction.user.displayAvatarURL()
+                })
+                .setTimestamp();
 
             // Ajout des champs optionnels avec style
             if (rr) {
-                mainEmbed.fields.push({
+                mainEmbed.addFields([{
                     name: '⚖️ **Risk/Reward Ratio**',
                     value: `\`\`\`yaml\n${rr}\`\`\``,
                     inline: true
-                });
+                }]);
             }
 
             if (reasoning) {
-                mainEmbed.fields.push({
+                mainEmbed.addFields([{
                     name: '🧠 **Analysis & Reasoning**',
                     value: `\`\`\`md\n# ${reasoning}\`\`\``,
                     inline: false
-                });
+                }]);
             }
 
             const embeds = [mainEmbed];
 
             // Si une image est fournie, créer un embed séparé pour le chart
             if (chart) {
-                const chartEmbed = {
-                    title: `📊 Technical Analysis - ${symbol.toUpperCase()}`,
-                    image: { url: chart.url },
-                    color: parseInt(style.color.slice(1), 16)
-                };
+                const chartEmbed = new EmbedBuilder()
+                    .setTitle(`📊 Technical Analysis - ${symbol.toUpperCase()}`)
+                    .setImage(chart.url)
+                    .setColor(style.color);
                 
                 embeds.push(chartEmbed);
             }
