@@ -9,14 +9,15 @@ if (typeof globalThis.ReadableStream === 'undefined') {
 // Démarrer le serveur web pour Replit
 require('./server');
 
-const { Client, GatewayIntentBits, SlashCommandBuilder, Routes, EmbedBuilder } = require('discord.js');
+const { Client, Intents, SlashCommandBuilder } = require('discord.js');
 const { REST } = require('@discordjs/rest');
+const { Routes } = require('discord-api-types/v9');
 
 // Configuration du client Discord
 const client = new Client({
     intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages
+        Intents.FLAGS.GUILDS,
+        Intents.FLAGS.GUILD_MESSAGES
     ]
 });
 
@@ -61,7 +62,7 @@ const callCommand = new SlashCommandBuilder()
 async function deployCommands() {
     const commands = [callCommand];
     
-    const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
+    const rest = new REST({ version: '9' }).setToken(process.env.TOKEN);
     
     try {
         console.log('🔄 Enregistrement des commandes slash...');
@@ -87,7 +88,7 @@ client.once('ready', async () => {
 function getTradeStyle(direction) {
     const isLong = direction.toLowerCase() === 'long';
     return {
-        color: isLong ? 0x00FF88 : 0xFF4444,
+        color: isLong ? '#00FF88' : '#FF4444',
         emoji: isLong ? '📈' : '📉',
         directionEmoji: isLong ? '🟢' : '🔴',
         trend: isLong ? '⬆️' : '⬇️'
@@ -101,7 +102,7 @@ function formatTakeProfit(tp) {
 
 // Gestion des interactions (commandes slash)
 client.on('interactionCreate', async interaction => {
-    if (!interaction.isChatInputCommand()) return;
+    if (!interaction.isCommand()) return;
     
     if (interaction.commandName === 'call') {
         // Vérifier si l'interaction n'a pas expiré
@@ -124,11 +125,11 @@ client.on('interactionCreate', async interaction => {
             const style = getTradeStyle(direction);
             
             // Embed principal avec le design sophistiqué
-            const mainEmbed = new EmbedBuilder()
-                .setTitle(`${style.emoji} **TRADE SIGNAL** ${style.emoji}`)
-                .setDescription(`## **${symbol.toUpperCase()}** ${style.directionEmoji} **${direction.toUpperCase()}** ${style.trend}`)
-                .setColor(style.color)
-                .addFields([
+            const mainEmbed = {
+                title: `${style.emoji} **TRADE SIGNAL** ${style.emoji}`,
+                description: `## **${symbol.toUpperCase()}** ${style.directionEmoji} **${direction.toUpperCase()}** ${style.trend}`,
+                color: parseInt(style.color.slice(1), 16),
+                fields: [
                     {
                         name: '🎯 **Entry Point**',
                         value: `\`\`\`fix\n${entry}\`\`\``,
@@ -144,47 +145,48 @@ client.on('interactionCreate', async interaction => {
                         value: `\`\`\`css\n${formatTakeProfit(tp)}\`\`\``,
                         inline: false
                     }
-                ])
-                .setFooter({ 
-                    text: `📊 Published by ${interaction.user.displayName} • ${new Date().toLocaleString('fr-FR')}`,
-                    iconURL: interaction.user.displayAvatarURL()
-                })
-                .setTimestamp();
+                ],
+                footer: { 
+                    text: `📊 Published by ${interaction.user.tag} • ${new Date().toLocaleString('fr-FR')}`,
+                    icon_url: interaction.user.displayAvatarURL()
+                },
+                timestamp: new Date().toISOString()
+            };
 
             // Ajout des champs optionnels avec style
             if (rr) {
-                mainEmbed.addFields([{
+                mainEmbed.fields.push({
                     name: '⚖️ **Risk/Reward Ratio**',
                     value: `\`\`\`yaml\n${rr}\`\`\``,
                     inline: true
-                }]);
+                });
             }
 
             if (reasoning) {
-                mainEmbed.addFields([{
+                mainEmbed.fields.push({
                     name: '🧠 **Analysis & Reasoning**',
                     value: `\`\`\`md\n# ${reasoning}\`\`\``,
                     inline: false
-                }]);
+                });
             }
 
             const embeds = [mainEmbed];
 
             // Si une image est fournie, créer un embed séparé pour le chart
             if (chart) {
-                const chartEmbed = new EmbedBuilder()
-                    .setTitle(`📊 Technical Analysis - ${symbol.toUpperCase()}`)
-                    .setImage(chart.url)
-                    .setColor(style.color);
+                const chartEmbed = {
+                    title: `📊 Technical Analysis - ${symbol.toUpperCase()}`,
+                    image: { url: chart.url },
+                    color: parseInt(style.color.slice(1), 16)
+                };
                 
                 embeds.push(chartEmbed);
             }
 
-            // Répondre avec les nouvelles flags au lieu de ephemeral
+            // Répondre avec les embeds
             await interaction.reply({
                 content: `## 🚨 **NEW TRADE ALERT** 🚨\n> *Signal generated for* **${symbol.toUpperCase()}**`,
-                embeds: embeds,
-                flags: [] // Pas de flags = message public
+                embeds: embeds
             });
             
             console.log(`📊 Signal publié par ${interaction.user.tag}: ${symbol} ${direction}${chart ? ' (avec image)' : ''}`);
@@ -197,7 +199,7 @@ client.on('interactionCreate', async interaction => {
                 try {
                     await interaction.reply({
                         content: '❌ Une erreur s\'est produite lors de la publication du signal.',
-                        flags: [64] // EPHEMERAL flag
+                        ephemeral: true
                     });
                 } catch (replyError) {
                     console.error('❌ Impossible de répondre à l\'interaction:', replyError.message);
