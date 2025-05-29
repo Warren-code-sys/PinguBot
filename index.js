@@ -1,5 +1,11 @@
 require('dotenv').config();
 
+// Polyfill pour ReadableStream si nécessaire (compatibilité Replit)
+if (typeof globalThis.ReadableStream === 'undefined') {
+    const { ReadableStream } = require('stream/web');
+    globalThis.ReadableStream = ReadableStream;
+}
+
 // Démarrer le serveur web pour Replit
 require('./server');
 
