@@ -1,0 +1,55 @@
+Crée un bot Discord en Node.js avec Discord.js v14, qui enregistre une commande slash /call pour publier des signaux de trade.
+
+Spécificités :
+
+Utilise un fichier .env avec les variables : TOKEN, CLIENT_ID, GUILD_ID
+
+La commande /call contient les options suivantes :
+
+symbol (string, required)
+
+trade_type (string, required)
+
+market_type (string, required)
+
+direction (string, required)
+
+exec_type (string, required)
+
+entry (string, required)
+
+stop (string, required)
+
+tps (string, required)
+
+rr (string, optional)
+
+reasoning (string, optional)
+
+risk (string, optional)
+
+Quand un utilisateur utilise /call, le bot doit répondre avec un message formaté affichant tous les champs sous forme de bloc clair, comme :
+
+makefile
+Copier
+Modifier
+📣 **New Trade Call**
+
+**SYMBOL**: BTCUSDT
+**TRADE_TYPE**: Scalping
+**MARKET_TYPE**: Futures
+**DIRECTION**: Short
+**EXEC_TYPE**: Limit
+**ENTRY**: 68,420
+**STOP**: 69,000
+**TPS**: 67,000 - 65,000
+**RR**: 2.5
+**REASONING**: Double top + divergences
+**RISK**: 2%
+Génère tous les fichiers nécessaires :
+
+index.js (avec logique complète)
+
+.env (sans valeurs, juste les clés)
+
+package.json (avec les dépendances)

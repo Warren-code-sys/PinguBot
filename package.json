@@ -1,0 +1,25 @@
+{
+  "name": "pingubot",
+  "version": "1.0.0",
+  "description": "Bot Discord pour publier des signaux de trade",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "keywords": ["discord", "bot", "trading", "signals", "replit"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=16.9.0"
+  },
+  "replit": {
+    "language": "nodejs",
+    "run": "node index.js"
+  }
+} 
