@@ -113,24 +113,29 @@ client.on('interactionCreate', async (interaction) => {
             
             const style = getTradeStyle(direction);
             
-            // Embed principal avec le design sophistiqué (v13 syntax)
+            // Embed principal avec syntaxe v13 correcte
             const mainEmbed = new MessageEmbed()
                 .setTitle(`${style.emoji} **TRADE SIGNAL** ${style.emoji}`)
                 .setDescription(`**${symbol.toUpperCase()}** ${style.directionEmoji} **${direction.toUpperCase()}** ${style.trend}`)
                 .setColor(style.color)
-                .addField('🎯 **Entry Point**', `\`\`\`${entry}\`\`\``, true)
-                .addField('🛡️ **Stop Loss**', `\`\`\`${stop}\`\`\``, true)
-                .addField('💰 **Take Profits**', `\`\`\`${tp}\`\`\``, false)
-                .setFooter(`📊 Published by ${interaction.user.tag} • ${new Date().toLocaleString('fr-FR')}`, interaction.user.displayAvatarURL())
+                .addFields([
+                    { name: '🎯 **Entry Point**', value: `\`\`\`${entry}\`\`\``, inline: true },
+                    { name: '🛡️ **Stop Loss**', value: `\`\`\`${stop}\`\`\``, inline: true },
+                    { name: '💰 **Take Profits**', value: `\`\`\`${tp}\`\`\``, inline: false }
+                ])
+                .setFooter({ 
+                    text: `📊 Published by ${interaction.user.tag} • ${new Date().toLocaleString('fr-FR')}`, 
+                    iconURL: interaction.user.displayAvatarURL() 
+                })
                 .setTimestamp();
             
             // Ajout des champs optionnels
             if (rr) {
-                mainEmbed.addField('⚖️ **Risk/Reward Ratio**', `\`\`\`${rr}\`\`\``, true);
+                mainEmbed.addFields([{ name: '⚖️ **Risk/Reward Ratio**', value: `\`\`\`${rr}\`\`\``, inline: true }]);
             }
             
             if (reasoning) {
-                mainEmbed.addField('🧠 **Analysis & Reasoning**', `\`\`\`${reasoning}\`\`\``, false);
+                mainEmbed.addFields([{ name: '🧠 **Analysis & Reasoning**', value: `\`\`\`${reasoning}\`\`\``, inline: false }]);
             }
             
             const embeds = [mainEmbed];
@@ -145,7 +150,7 @@ client.on('interactionCreate', async (interaction) => {
                 embeds.push(chartEmbed);
             }
             
-            // Répondre
+            // Répondre UNE SEULE FOIS
             await interaction.reply({
                 content: `🚨 **NEW TRADE ALERT** 🚨\n> *Signal generated for* **${symbol.toUpperCase()}**`,
                 embeds: embeds
@@ -156,11 +161,16 @@ client.on('interactionCreate', async (interaction) => {
         } catch (error) {
             console.error('❌ Erreur lors de la réponse:', error);
             
-            if (!interaction.replied) {
-                await interaction.reply({
-                    content: '❌ Une erreur s\'est produite lors de la publication du signal.',
-                    ephemeral: true
-                }).catch(console.error);
+            // Gestion d'erreur sécurisée
+            if (!interaction.replied && !interaction.deferred) {
+                try {
+                    await interaction.reply({
+                        content: '❌ Une erreur s\'est produite lors de la publication du signal.',
+                        ephemeral: true
+                    });
+                } catch (replyError) {
+                    console.error('❌ Impossible de répondre:', replyError);
+                }
             }
         }
     }
