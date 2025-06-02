@@ -8,11 +8,14 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
 
+console.log('🚀 Démarrage de PinguBot...');
+
 // Configuration du client Discord
 const client = new Client({
     intents: [
         Intents.FLAGS.GUILDS,
-        Intents.FLAGS.GUILD_MESSAGES
+        Intents.FLAGS.GUILD_MESSAGES,
+        Intents.FLAGS.GUILD_MESSAGE_REACTIONS
     ]
 });
 
@@ -55,8 +58,12 @@ const callCommand = new SlashCommandBuilder()
 
 // Enregistrement des commandes slash
 async function deployCommands() {
+    if (!process.env.TOKEN || !process.env.CLIENT_ID || !process.env.GUILD_ID) {
+        console.error('❌ Variables d\'environnement manquantes! Vérifiez TOKEN, CLIENT_ID, GUILD_ID');
+        return;
+    }
+
     const commands = [callCommand];
-    
     const rest = new REST({ version: '9' }).setToken(process.env.TOKEN);
     
     try {
@@ -76,6 +83,7 @@ async function deployCommands() {
 // Événement : Bot prêt
 client.once('ready', async () => {
     console.log(`🤖 ${client.user.tag} est en ligne!`);
+    console.log(`📊 Connecté sur ${client.guilds.cache.size} serveur(s)`);
     await deployCommands();
 });
 
@@ -83,7 +91,7 @@ client.once('ready', async () => {
 function getTradeStyle(direction) {
     const isLong = direction.toLowerCase() === 'long';
     return {
-        color: isLong ? '#00FF88' : '#FF4444',
+        color: isLong ? 0x00FF88 : 0xFF4444,
         emoji: isLong ? '📈' : '📉',
         directionEmoji: isLong ? '🟢' : '🔴',
         trend: isLong ? '⬆️' : '⬇️'
@@ -100,11 +108,7 @@ client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
     
     if (interaction.commandName === 'call') {
-        // Vérifier si l'interaction n'a pas expiré
-        if (interaction.replied || interaction.deferred) {
-            console.log('⚠️ Interaction déjà traitée');
-            return;
-        }
+        console.log(`📊 Commande /call reçue de ${interaction.user.tag}`);
 
         try {
             // Récupération des options
@@ -124,46 +128,24 @@ client.on('interactionCreate', async interaction => {
                 .setTitle(`${style.emoji} **TRADE SIGNAL** ${style.emoji}`)
                 .setDescription(`## **${symbol.toUpperCase()}** ${style.directionEmoji} **${direction.toUpperCase()}** ${style.trend}`)
                 .setColor(style.color)
-                .addFields([
-                    {
-                        name: '🎯 **Entry Point**',
-                        value: `\`\`\`fix\n${entry}\`\`\``,
-                        inline: true
-                    },
-                    {
-                        name: '🛡️ **Stop Loss**',
-                        value: `\`\`\`fix\n${stop}\`\`\``,
-                        inline: true
-                    },
-                    {
-                        name: '💰 **Take Profits**',
-                        value: `\`\`\`css\n${formatTakeProfit(tp)}\`\`\``,
-                        inline: false
-                    }
-                ])
+                .addField('🎯 **Entry Point**', `\`\`\`fix\n${entry}\`\`\``, true)
+                .addField('🛡️ **Stop Loss**', `\`\`\`fix\n${stop}\`\`\``, true)
+                .addField('💰 **Take Profits**', `\`\`\`css\n${formatTakeProfit(tp)}\`\`\``, false)
                 .setFooter(`📊 Published by ${interaction.user.tag} • ${new Date().toLocaleString('fr-FR')}`, interaction.user.displayAvatarURL())
                 .setTimestamp();
 
-            // Ajout des champs optionnels avec style
+            // Ajout des champs optionnels
             if (rr) {
-                mainEmbed.addFields([{
-                    name: '⚖️ **Risk/Reward Ratio**',
-                    value: `\`\`\`yaml\n${rr}\`\`\``,
-                    inline: true
-                }]);
+                mainEmbed.addField('⚖️ **Risk/Reward Ratio**', `\`\`\`yaml\n${rr}\`\`\``, true);
             }
 
             if (reasoning) {
-                mainEmbed.addFields([{
-                    name: '🧠 **Analysis & Reasoning**',
-                    value: `\`\`\`md\n# ${reasoning}\`\`\``,
-                    inline: false
-                }]);
+                mainEmbed.addField('🧠 **Analysis & Reasoning**', `\`\`\`md\n# ${reasoning}\`\`\``, false);
             }
 
             const embeds = [mainEmbed];
 
-            // Si une image est fournie, créer un embed séparé pour le chart
+            // Si une image est fournie
             if (chart) {
                 const chartEmbed = new MessageEmbed()
                     .setTitle(`📊 Technical Analysis - ${symbol.toUpperCase()}`)
@@ -173,18 +155,17 @@ client.on('interactionCreate', async interaction => {
                 embeds.push(chartEmbed);
             }
 
-            // Répondre avec les embeds
+            // Répondre
             await interaction.reply({
                 content: `## 🚨 **NEW TRADE ALERT** 🚨\n> *Signal generated for* **${symbol.toUpperCase()}**`,
                 embeds: embeds
             });
             
-            console.log(`📊 Signal publié par ${interaction.user.tag}: ${symbol} ${direction}${chart ? ' (avec image)' : ''}`);
+            console.log(`✅ Signal publié: ${symbol} ${direction}${chart ? ' (avec image)' : ''}`);
             
         } catch (error) {
             console.error('❌ Erreur lors de la réponse:', error);
             
-            // Vérifier si on peut encore répondre avant d'essayer
             if (!interaction.replied && !interaction.deferred) {
                 try {
                     await interaction.reply({
@@ -192,7 +173,7 @@ client.on('interactionCreate', async interaction => {
                         ephemeral: true
                     });
                 } catch (replyError) {
-                    console.error('❌ Impossible de répondre à l\'interaction:', replyError.message);
+                    console.error('❌ Impossible de répondre:', replyError.message);
                 }
             }
         }
@@ -204,9 +185,23 @@ client.on('error', error => {
     console.error('❌ Erreur Discord.js:', error);
 });
 
+client.on('warn', warn => {
+    console.warn('⚠️ Avertissement:', warn);
+});
+
 process.on('unhandledRejection', error => {
     console.error('❌ Erreur non gérée:', error);
 });
 
 // Connexion du bot
-client.login(process.env.TOKEN); 
+if (!process.env.TOKEN) {
+    console.error('❌ TOKEN manquant dans les variables d\'environnement!');
+    process.exit(1);
+}
+
+client.login(process.env.TOKEN)
+    .then(() => console.log('🔗 Connexion au bot réussie'))
+    .catch(error => {
+        console.error('❌ Erreur de connexion:', error);
+        process.exit(1);
+    }); 
