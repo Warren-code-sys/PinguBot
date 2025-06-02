@@ -4,118 +4,90 @@ Bot Discord pour publier des signaux de trade avec la commande `/call`.
 
 ## 🚀 Déploiement sur Replit (Recommandé)
 
-### **Étape 1 : Préparer Replit**
+### Étape 1 : Préparer Replit
 1. Allez sur [Replit.com](https://replit.com) et créez un compte
-2. Cliquez sur **"Create Repl"** 
-3. Sélectionnez **"Import from GitHub"** ou **"Node.js"**
-4. Importez ce projet ou uploadez les fichiers
+2. Cliquez sur **"Create Repl"**
+3. Sélectionnez **"Import from GitHub"**
+4. Collez l'URL : `https://github.com/Warren-code-sys/PinguBot.git`
+5. Nommez votre projet **"PinguBot"**
+6. Cliquez sur **"Import from GitHub"**
 
-### **Étape 2 : Configuration**
-1. **Créez les Secrets (variables d'environnement) :**
-   - Dans Replit, allez dans l'onglet **"Secrets"** (🔒)
-   - Ajoutez ces 3 secrets :
-   ```
-   TOKEN = votre_token_discord
-   CLIENT_ID = votre_client_id
-   GUILD_ID = votre_guild_id
-   ```
+### Étape 2 : Configuration des variables d'environnement
+Dans Replit, allez dans **Secrets** (🔒) et ajoutez :
 
-### **Étape 3 : Obtenir les valeurs Discord**
-1. **Allez sur [Discord Developer Portal](https://discord.com/developers/applications)**
-2. **Créez une nouvelle application**
-3. **Dans l'onglet "Bot" :**
-   - Créez un bot et copiez le token → `TOKEN`
-4. **Dans "General Information" :**
-   - Copiez le Client ID → `CLIENT_ID` 
-5. **Dans Discord :**
-   - Activez le mode développeur
-   - Clic droit sur votre serveur → "Copier l'ID" → `GUILD_ID`
+| Variable | Description | Exemple |
+|----------|-------------|---------|
+| `TOKEN` | Token de votre bot Discord | `MTIzNDU2Nzg5MDEyMzQ1Njc4OQ.Gh7bcd.abcdef123456789` |
+| `CLIENT_ID` | ID de votre application Discord | `1234567890123456789` |
+| `GUILD_ID` | ID de votre serveur Discord | `9876543210987654321` |
 
-### **Étape 4 : Inviter le bot**
-1. **Dans "OAuth2" > "URL Generator" :**
-   - ✅ Cochez **"bot"** et **"applications.commands"**
-   - Sélectionnez les permissions nécessaires
-   - Visitez l'URL générée pour inviter le bot
+### Étape 3 : Lancement
+1. Cliquez sur **"Run"** ▶️
+2. Le bot se lancera automatiquement
 
-### **Étape 5 : Lancer sur Replit**
-1. **Cliquez sur le bouton "Run" ▶️**
-2. **Le bot sera en ligne 24/7 !**
-3. **Vérifiez le statut sur l'URL générée par Replit**
+### Étape 4 : Maintien 24/7 (Optionnel)
+Pour maintenir le bot actif 24/7, utilisez **UptimeRobot** :
+1. Récupérez l'URL de votre Replit (ex: `https://pingubot.votrenom.repl.co`)
+2. Créez un compte sur [UptimeRobot.com](https://uptimerobot.com)
+3. Ajoutez un monitor HTTP vers votre URL Replit
+4. Configurez un ping toutes les 5 minutes
 
----
+## 📊 Utilisation
 
-## 🎯 Utilisation
-
-### Commande `/call`
-
-Publie un signal de trade simplifié avec les informations essentielles.
-
-**Options requises :**
-- `symbol`: Symbole du trade (ex: BTCUSDT)
-- `direction`: Direction (Long/Short)
-- `entry`: Prix d'entrée
-- `stop`: Stop Loss
-- `tp`: Take Profits (ex: 67000-65000)
-
-**Options optionnelles :**
-- `rr`: Risk/Reward ratio (ex: 2.5)
-- `reasoning`: Analyse du trade
-- `chart`: Image du graphique/chart (PNG, JPG, GIF) 📊
-
-### Exemple d'utilisation :
+Une fois le bot en ligne, utilisez la commande `/call` dans votre serveur Discord :
 
 ```
-/call symbol:BTCUSDT direction:Short entry:68420 stop:69000 tp:67000-65000 rr:2.5 reasoning:Double top + divergences chart:[votre_image.png]
+/call symbol:BTCUSDT direction:Long entry:68420 stop:69000 tp:67000-65000 rr:2.5 reasoning:"Double top + divergences"
 ```
 
-### Format de sortie :
+## 🛠️ Développement local
 
-```
-🚨 NEW TRADE ALERT 🚨
-Signal generated for BTCUSDT
-
-📉 TRADE SIGNAL 📉
-BTCUSDT 🔴 SHORT ⬇️
-
-🎯 Entry Point: 68420
-🛡️ Stop Loss: 69000
-💰 Take Profits: 67000 → 65000
-⚖️ Risk/Reward Ratio: 2.5
-🧠 Analysis & Reasoning: Double top + divergences
-```
-
-*+ Image du chart intégrée si fournie (avec couleur selon la direction)*
-
-## 🌐 Installation Locale (Optionnelle)
-
-Si vous préférez faire tourner le bot en local :
+Si vous préférez développer en local :
 
 ```bash
+# Cloner le projet
+git clone https://github.com/Warren-code-sys/PinguBot.git
+cd PinguBot
+
+# Installer les dépendances
 npm install
-npm start
+
+# Créer le fichier .env avec vos variables
+# (voir env-template.txt pour l'exemple)
+
+# Lancer le bot
+node index.js
 ```
 
-## 📋 Prérequis
+## 📋 Variables d'environnement requises
 
-- Compte Replit (gratuit)
-- Un serveur Discord
-- Un bot Discord avec les permissions nécessaires
+Copiez `env-template.txt` vers `.env` et remplissez :
 
-## 🛠️ Technologies
+- `TOKEN` : Token de votre bot Discord (depuis Discord Developer Portal)
+- `CLIENT_ID` : ID de votre application Discord
+- `GUILD_ID` : ID de votre serveur Discord (Mode développeur > Clic droit > Copier l'ID)
 
-- Discord.js v14
-- Node.js
-- Express.js (pour Replit)
-- dotenv
+## 🎯 Fonctionnalités
 
-## 🎮 Avantages Replit
+- ✅ Commande slash `/call` pour signaux de trade
+- ✅ Embeds Discord sophistiqués avec couleurs
+- ✅ Support d'images/graphiques
+- ✅ Champs optionnels (Risk/Reward, Analysis)
+- ✅ Design adaptatif (vert pour Long, rouge pour Short)
+- ✅ Compatible Replit pour hébergement 24/7
 
-✅ **24/7 en ligne** - Pas besoin de garder votre PC allumé  
-✅ **Gratuit** - Plan gratuit suffisant pour un bot Discord  
-✅ **Interface web** - Monitoring et logs en temps réel  
-✅ **Déploiement facile** - Un clic et c'est en ligne  
-✅ **Sauvegarde automatique** - Votre code est sauvé dans le cloud  
+## 🐛 Résolution de problèmes
 
----
+**"App is in recovery mode" sur Replit :**
+1. Vérifiez que toutes les variables d'environnement sont définies
+2. Consultez les logs dans la Console Replit
+3. Assurez-vous que votre bot Discord a les permissions nécessaires
 
-Développé avec ❤️ pour la communauté trading 
+**Le bot ne répond pas :**
+1. Vérifiez que le bot est invité sur votre serveur avec les permissions appropriées
+2. Vérifiez que les slash commands sont enregistrées
+3. Consultez les logs pour d'éventuelles erreurs
+
+## 📝 License
+
+MIT License - Voir le fichier LICENSE pour plus de détails. 
