@@ -10,64 +10,62 @@ const { Routes } = require('discord-api-types/v9');
 
 console.log('🚀 Démarrage de PinguBot...');
 
-// Configuration du client Discord
+// Configuration du client Discord avec TOUS les intents nécessaires
 const client = new Client({
     intents: [
         Intents.FLAGS.GUILDS,
         Intents.FLAGS.GUILD_MESSAGES,
-        Intents.FLAGS.GUILD_MESSAGE_REACTIONS
+        Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+        Intents.FLAGS.DIRECT_MESSAGES
     ]
 });
 
 // Définition de la commande /call
-const callCommand = new SlashCommandBuilder()
-    .setName('call')
-    .setDescription('Publier un signal de trade')
-    .addStringOption(option =>
-        option.setName('symbol')
-            .setDescription('Symbole du trade (ex: BTCUSDT)')
-            .setRequired(true))
-    .addStringOption(option =>
-        option.setName('direction')
-            .setDescription('Direction du trade (Long/Short)')
-            .setRequired(true))
-    .addStringOption(option =>
-        option.setName('entry')
-            .setDescription('Prix d\'entrée')
-            .setRequired(true))
-    .addStringOption(option =>
-        option.setName('stop')
-            .setDescription('Stop Loss')
-            .setRequired(true))
-    .addStringOption(option =>
-        option.setName('tp')
-            .setDescription('Take Profits (séparés par des tirets)')
-            .setRequired(true))
-    .addStringOption(option =>
-        option.setName('rr')
-            .setDescription('Risk/Reward ratio')
-            .setRequired(false))
-    .addStringOption(option =>
-        option.setName('reasoning')
-            .setDescription('Analyse/Raison du trade')
-            .setRequired(false))
-    .addAttachmentOption(option =>
-        option.setName('chart')
-            .setDescription('Image du graphique/chart (PNG, JPG, GIF)')
-            .setRequired(false));
+const commands = [
+    new SlashCommandBuilder()
+        .setName('call')
+        .setDescription('Publier un signal de trade')
+        .addStringOption(option =>
+            option.setName('symbol')
+                .setDescription('Symbole du trade (ex: BTCUSDT)')
+                .setRequired(true))
+        .addStringOption(option =>
+            option.setName('direction')
+                .setDescription('Direction du trade (Long/Short)')
+                .setRequired(true))
+        .addStringOption(option =>
+            option.setName('entry')
+                .setDescription('Prix d\'entrée')
+                .setRequired(true))
+        .addStringOption(option =>
+            option.setName('stop')
+                .setDescription('Stop Loss')
+                .setRequired(true))
+        .addStringOption(option =>
+            option.setName('tp')
+                .setDescription('Take Profits (séparés par des tirets)')
+                .setRequired(true))
+        .addStringOption(option =>
+            option.setName('rr')
+                .setDescription('Risk/Reward ratio')
+                .setRequired(false))
+        .addStringOption(option =>
+            option.setName('reasoning')
+                .setDescription('Analyse/Raison du trade')
+                .setRequired(false))
+        .addAttachmentOption(option =>
+            option.setName('chart')
+                .setDescription('Image du graphique/chart (PNG, JPG, GIF)')
+                .setRequired(false))
+        .toJSON()
+];
 
 // Enregistrement des commandes slash
 async function deployCommands() {
-    if (!process.env.TOKEN || !process.env.CLIENT_ID || !process.env.GUILD_ID) {
-        console.error('❌ Variables d\'environnement manquantes! Vérifiez TOKEN, CLIENT_ID, GUILD_ID');
-        return;
-    }
-
-    const commands = [callCommand];
-    const rest = new REST({ version: '9' }).setToken(process.env.TOKEN);
-    
     try {
         console.log('🔄 Enregistrement des commandes slash...');
+        
+        const rest = new REST({ version: '9' }).setToken(process.env.TOKEN);
         
         await rest.put(
             Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
@@ -87,121 +85,76 @@ client.once('ready', async () => {
     await deployCommands();
 });
 
-// Fonction pour obtenir les emojis et couleurs selon la direction
-function getTradeStyle(direction) {
-    const isLong = direction.toLowerCase() === 'long';
-    return {
-        color: isLong ? 0x00FF88 : 0xFF4444,
-        emoji: isLong ? '📈' : '📉',
-        directionEmoji: isLong ? '🟢' : '🔴',
-        trend: isLong ? '⬆️' : '⬇️'
-    };
-}
-
-// Fonction pour formater les take profits
-function formatTakeProfit(tp) {
-    return tp.replace(/-/g, '→').replace(/,/g, ',\n');
-}
-
-// Gestion des interactions (commandes slash)
-client.on('interactionCreate', async interaction => {
+// Gestion des interactions - VERSION SIMPLE
+client.on('interactionCreate', async (interaction) => {
+    console.log('🔔 Interaction reçue:', interaction.type);
+    
     if (!interaction.isCommand()) return;
     
+    console.log('📊 Commande reçue:', interaction.commandName);
+    
     if (interaction.commandName === 'call') {
-        console.log(`📊 Commande /call reçue de ${interaction.user.tag}`);
-
+        console.log(`📊 Commande /call de ${interaction.user.tag}`);
+        
         try {
-            // Récupération des options
-            const symbol = interaction.options.getString('symbol');
-            const direction = interaction.options.getString('direction');
-            const entry = interaction.options.getString('entry');
-            const stop = interaction.options.getString('stop');
-            const tp = interaction.options.getString('tp');
+            // Récupération des valeurs
+            const symbol = interaction.options.getString('symbol') || 'BTCUSDT';
+            const direction = interaction.options.getString('direction') || 'Long';
+            const entry = interaction.options.getString('entry') || '0';
+            const stop = interaction.options.getString('stop') || '0';
+            const tp = interaction.options.getString('tp') || '0';
             const rr = interaction.options.getString('rr');
             const reasoning = interaction.options.getString('reasoning');
             const chart = interaction.options.getAttachment('chart');
             
-            const style = getTradeStyle(direction);
-            
-            // Embed principal avec le design sophistiqué
-            const mainEmbed = new MessageEmbed()
-                .setTitle(`${style.emoji} **TRADE SIGNAL** ${style.emoji}`)
-                .setDescription(`## **${symbol.toUpperCase()}** ${style.directionEmoji} **${direction.toUpperCase()}** ${style.trend}`)
-                .setColor(style.color)
-                .addField('🎯 **Entry Point**', `\`\`\`fix\n${entry}\`\`\``, true)
-                .addField('🛡️ **Stop Loss**', `\`\`\`fix\n${stop}\`\`\``, true)
-                .addField('💰 **Take Profits**', `\`\`\`css\n${formatTakeProfit(tp)}\`\`\``, false)
-                .setFooter(`📊 Published by ${interaction.user.tag} • ${new Date().toLocaleString('fr-FR')}`, interaction.user.displayAvatarURL())
+            // Création de l'embed
+            const embed = new MessageEmbed()
+                .setTitle('📈 TRADE SIGNAL 📈')
+                .setDescription(`**${symbol.toUpperCase()}** - **${direction.toUpperCase()}**`)
+                .setColor(direction.toLowerCase() === 'long' ? '#00FF88' : '#FF4444')
+                .addField('Entry', entry, true)
+                .addField('Stop', stop, true)
+                .addField('TP', tp, true)
+                .setFooter(`By ${interaction.user.tag}`)
                 .setTimestamp();
-
-            // Ajout des champs optionnels
+            
             if (rr) {
-                mainEmbed.addField('⚖️ **Risk/Reward Ratio**', `\`\`\`yaml\n${rr}\`\`\``, true);
+                embed.addField('R/R', rr, true);
             }
-
+            
             if (reasoning) {
-                mainEmbed.addField('🧠 **Analysis & Reasoning**', `\`\`\`md\n# ${reasoning}\`\`\``, false);
+                embed.addField('Analysis', reasoning, false);
             }
-
-            const embeds = [mainEmbed];
-
-            // Si une image est fournie
+            
             if (chart) {
-                const chartEmbed = new MessageEmbed()
-                    .setTitle(`📊 Technical Analysis - ${symbol.toUpperCase()}`)
-                    .setImage(chart.url)
-                    .setColor(style.color);
-                
-                embeds.push(chartEmbed);
+                embed.setImage(chart.url);
             }
-
-            // Répondre
+            
+            // Réponse
             await interaction.reply({
-                content: `## 🚨 **NEW TRADE ALERT** 🚨\n> *Signal generated for* **${symbol.toUpperCase()}**`,
-                embeds: embeds
+                content: '🚨 **NEW TRADE ALERT** 🚨',
+                embeds: [embed]
             });
             
-            console.log(`✅ Signal publié: ${symbol} ${direction}${chart ? ' (avec image)' : ''}`);
+            console.log('✅ Signal publié avec succès!');
             
         } catch (error) {
-            console.error('❌ Erreur lors de la réponse:', error);
+            console.error('❌ Erreur:', error);
             
-            if (!interaction.replied && !interaction.deferred) {
-                try {
-                    await interaction.reply({
-                        content: '❌ Une erreur s\'est produite lors de la publication du signal.',
-                        ephemeral: true
-                    });
-                } catch (replyError) {
-                    console.error('❌ Impossible de répondre:', replyError.message);
-                }
+            // Réponse d'erreur
+            if (!interaction.replied) {
+                await interaction.reply({
+                    content: '❌ Erreur lors de la publication du signal.',
+                    ephemeral: true
+                }).catch(console.error);
             }
         }
     }
 });
 
 // Gestion des erreurs
-client.on('error', error => {
-    console.error('❌ Erreur Discord.js:', error);
-});
+client.on('error', console.error);
+client.on('warn', console.warn);
 
-client.on('warn', warn => {
-    console.warn('⚠️ Avertissement:', warn);
-});
-
-process.on('unhandledRejection', error => {
-    console.error('❌ Erreur non gérée:', error);
-});
-
-// Connexion du bot
-if (!process.env.TOKEN) {
-    console.error('❌ TOKEN manquant dans les variables d\'environnement!');
-    process.exit(1);
-}
-
-client.login(process.env.TOKEN)
-    .then(() => console.log('🔗 Connexion au bot réussie'))
-    .catch(error => {
-        console.error('❌ Erreur de connexion:', error);
-        process.exit(1);
-    }); 
+// Connexion
+client.login(process.env.TOKEN); 
