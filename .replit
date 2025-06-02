@@ -1,16 +1,28 @@
+run = "npm start"
 entrypoint = "index.js"
-modules = ["nodejs-20:v8-20230920-bd784b9"]
+
+[languages.javascript]
+pattern = "**/*.{js,mjs,cjs,jsx,ts,tsx}"
+syntax = "javascript"
+
+[env]
+XDG_CONFIG_HOME = "/home/runner/.config"
 
 [nix]
-channel = "stable-23_05"
+channel = "stable-21_11"
 
 [deployment]
-run = ["node", "index.js"]
+run = ["sh", "-c", "npm start"]
 deploymentTarget = "cloudrun"
 
 [[ports]]
 localPort = 3000
 externalPort = 80
 
-[env]
-NODE_ENV = "production" 
+[packager]
+language = "nodejs"
+
+[packager.features]
+packageSearch = true
+guessImports = true
+enabledForHosting = false 
