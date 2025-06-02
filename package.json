@@ -1,29 +1,24 @@
 {
   "name": "pingubot",
   "version": "1.0.0",
-  "description": "Bot Discord pour publier des signaux de trade",
+  "description": "Bot Discord pour signaux de trading",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "node index.js",
-    "replit": "node index.js"
+    "dev": "nodemon index.js"
   },
-  "keywords": ["discord", "bot", "trading", "signals", "replit"],
-  "author": "",
-  "license": "MIT",
   "dependencies": {
-    "discord.js": "13.16.0",
-    "@discordjs/builders": "0.16.0",
-    "@discordjs/rest": "1.7.1",
-    "discord-api-types": "0.37.42",
-    "dotenv": "^16.3.1",
+    "discord.js": "^13.17.1",
+    "@discordjs/builders": "^0.16.0",
+    "@discordjs/rest": "^0.5.0",
+    "discord-api-types": "^0.33.5",
+    "dotenv": "^16.0.3",
     "express": "^4.18.2"
   },
-  "engines": {
-    "node": ">=16.0.0"
+  "devDependencies": {
+    "nodemon": "^2.0.20"
   },
-  "replit": {
-    "language": "nodejs",
-    "run": "node index.js"
-  }
+  "keywords": ["discord", "bot", "trading", "signals"],
+  "author": "Warren",
+  "license": "MIT"
 } 

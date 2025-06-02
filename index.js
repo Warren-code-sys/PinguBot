@@ -10,13 +10,10 @@ const { Routes } = require('discord-api-types/v9');
 
 console.log('🚀 Démarrage de PinguBot...');
 
-// Configuration du client Discord avec TOUS les intents nécessaires
+// Configuration du client Discord
 const client = new Client({
     intents: [
-        Intents.FLAGS.GUILDS,
-        Intents.FLAGS.GUILD_MESSAGES,
-        Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
-        Intents.FLAGS.DIRECT_MESSAGES
+        Intents.FLAGS.GUILDS
     ]
 });
 
@@ -85,66 +82,83 @@ client.once('ready', async () => {
     await deployCommands();
 });
 
-// Gestion des interactions - VERSION SIMPLE
+// Fonction pour obtenir les emojis et couleurs selon la direction
+function getTradeStyle(direction) {
+    const isLong = direction.toLowerCase() === 'long';
+    return {
+        color: isLong ? 0x00FF88 : 0xFF4444,
+        emoji: isLong ? '📈' : '📉',
+        directionEmoji: isLong ? '🟢' : '🔴',
+        trend: isLong ? '🔺' : '🔻'
+    };
+}
+
+// Gestion des interactions
 client.on('interactionCreate', async (interaction) => {
-    console.log('🔔 Interaction reçue:', interaction.type);
-    
     if (!interaction.isCommand()) return;
     
-    console.log('📊 Commande reçue:', interaction.commandName);
-    
     if (interaction.commandName === 'call') {
-        console.log(`📊 Commande /call de ${interaction.user.tag}`);
+        console.log(`📊 Commande /call reçue de ${interaction.user.tag}`);
         
         try {
-            // Récupération des valeurs
-            const symbol = interaction.options.getString('symbol') || 'BTCUSDT';
-            const direction = interaction.options.getString('direction') || 'Long';
-            const entry = interaction.options.getString('entry') || '0';
-            const stop = interaction.options.getString('stop') || '0';
-            const tp = interaction.options.getString('tp') || '0';
+            // Récupération des options
+            const symbol = interaction.options.getString('symbol');
+            const direction = interaction.options.getString('direction');
+            const entry = interaction.options.getString('entry');
+            const stop = interaction.options.getString('stop');
+            const tp = interaction.options.getString('tp');
             const rr = interaction.options.getString('rr');
             const reasoning = interaction.options.getString('reasoning');
             const chart = interaction.options.getAttachment('chart');
             
-            // Création de l'embed
-            const embed = new MessageEmbed()
-                .setTitle('📈 TRADE SIGNAL 📈')
-                .setDescription(`**${symbol.toUpperCase()}** - **${direction.toUpperCase()}**`)
-                .setColor(direction.toLowerCase() === 'long' ? '#00FF88' : '#FF4444')
-                .addField('Entry', entry, true)
-                .addField('Stop', stop, true)
-                .addField('TP', tp, true)
-                .setFooter(`By ${interaction.user.tag}`)
+            const style = getTradeStyle(direction);
+            
+            // Embed principal avec le design sophistiqué (v13 syntax)
+            const mainEmbed = new MessageEmbed()
+                .setTitle(`${style.emoji} **TRADE SIGNAL** ${style.emoji}`)
+                .setDescription(`**${symbol.toUpperCase()}** ${style.directionEmoji} **${direction.toUpperCase()}** ${style.trend}`)
+                .setColor(style.color)
+                .addField('🎯 **Entry Point**', `\`\`\`${entry}\`\`\``, true)
+                .addField('🛡️ **Stop Loss**', `\`\`\`${stop}\`\`\``, true)
+                .addField('💰 **Take Profits**', `\`\`\`${tp}\`\`\``, false)
+                .setFooter(`📊 Published by ${interaction.user.tag} • ${new Date().toLocaleString('fr-FR')}`, interaction.user.displayAvatarURL())
                 .setTimestamp();
             
+            // Ajout des champs optionnels
             if (rr) {
-                embed.addField('R/R', rr, true);
+                mainEmbed.addField('⚖️ **Risk/Reward Ratio**', `\`\`\`${rr}\`\`\``, true);
             }
             
             if (reasoning) {
-                embed.addField('Analysis', reasoning, false);
+                mainEmbed.addField('🧠 **Analysis & Reasoning**', `\`\`\`${reasoning}\`\`\``, false);
             }
             
+            const embeds = [mainEmbed];
+
+            // Si une image est fournie
             if (chart) {
-                embed.setImage(chart.url);
+                const chartEmbed = new MessageEmbed()
+                    .setTitle(`📊 Technical Analysis - ${symbol.toUpperCase()}`)
+                    .setImage(chart.url)
+                    .setColor(style.color);
+                
+                embeds.push(chartEmbed);
             }
             
-            // Réponse
+            // Répondre
             await interaction.reply({
-                content: '🚨 **NEW TRADE ALERT** 🚨',
-                embeds: [embed]
+                content: `🚨 **NEW TRADE ALERT** 🚨\n> *Signal generated for* **${symbol.toUpperCase()}**`,
+                embeds: embeds
             });
             
-            console.log('✅ Signal publié avec succès!');
+            console.log(`✅ Signal publié: ${symbol} ${direction}${chart ? ' (avec image)' : ''}`);
             
         } catch (error) {
-            console.error('❌ Erreur:', error);
+            console.error('❌ Erreur lors de la réponse:', error);
             
-            // Réponse d'erreur
             if (!interaction.replied) {
                 await interaction.reply({
-                    content: '❌ Erreur lors de la publication du signal.',
+                    content: '❌ Une erreur s\'est produite lors de la publication du signal.',
                     ephemeral: true
                 }).catch(console.error);
             }
