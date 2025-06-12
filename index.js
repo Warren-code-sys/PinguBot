@@ -28,19 +28,23 @@ const commands = [
                 .setRequired(true))
         .addStringOption(option =>
             option.setName('direction')
-                .setDescription('Direction du trade (Long/Short)')
-                .setRequired(true))
+                .setDescription('Direction du trade')
+                .setRequired(true)
+                .addChoices(
+                    { name: '📈 Long', value: 'long' },
+                    { name: '📉 Short', value: 'short' }
+                ))
         .addStringOption(option =>
             option.setName('entry')
                 .setDescription('Prix d\'entrée')
                 .setRequired(true))
         .addStringOption(option =>
-            option.setName('stop')
+            option.setName('sl')
                 .setDescription('Stop Loss')
                 .setRequired(true))
         .addStringOption(option =>
             option.setName('tp')
-                .setDescription('Take Profits (séparés par des tirets)')
+                .setDescription('Take Profit')
                 .setRequired(true))
         .addStringOption(option =>
             option.setName('rr')
@@ -105,7 +109,7 @@ client.on('interactionCreate', async (interaction) => {
             const symbol = interaction.options.getString('symbol');
             const direction = interaction.options.getString('direction');
             const entry = interaction.options.getString('entry');
-            const stop = interaction.options.getString('stop');
+            const sl = interaction.options.getString('sl');
             const tp = interaction.options.getString('tp');
             const rr = interaction.options.getString('rr');
             const reasoning = interaction.options.getString('reasoning');
@@ -120,8 +124,8 @@ client.on('interactionCreate', async (interaction) => {
                 .setColor(style.color)
                 .addFields([
                     { name: '🎯 **Entry Point**', value: `\`\`\`${entry}\`\`\``, inline: true },
-                    { name: '🛡️ **Stop Loss**', value: `\`\`\`${stop}\`\`\``, inline: true },
-                    { name: '💰 **Take Profits**', value: `\`\`\`${tp}\`\`\``, inline: false }
+                    { name: '🛡️ **Stop Loss**', value: `\`\`\`${sl}\`\`\``, inline: true },
+                    { name: '💰 **Take Profit**', value: `\`\`\`${tp}\`\`\``, inline: true }
                 ])
                 .setFooter({ 
                     text: `📊 Published by ${interaction.user.tag} • ${new Date().toLocaleString('fr-FR')}`, 

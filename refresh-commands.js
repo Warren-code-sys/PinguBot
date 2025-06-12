@@ -31,19 +31,23 @@ async function refreshCommands() {
                         .setRequired(true))
                 .addStringOption(option =>
                     option.setName('direction')
-                        .setDescription('Direction du trade (Long/Short)')
-                        .setRequired(true))
+                        .setDescription('Direction du trade')
+                        .setRequired(true)
+                        .addChoices(
+                            { name: '📈 Long', value: 'long' },
+                            { name: '📉 Short', value: 'short' }
+                        ))
                 .addStringOption(option =>
                     option.setName('entry')
                         .setDescription('Prix d\'entrée')
                         .setRequired(true))
                 .addStringOption(option =>
-                    option.setName('stop')
+                    option.setName('sl')
                         .setDescription('Stop Loss')
                         .setRequired(true))
                 .addStringOption(option =>
                     option.setName('tp')
-                        .setDescription('Take Profits')
+                        .setDescription('Take Profit')
                         .setRequired(true))
                 .addStringOption(option =>
                     option.setName('rr')

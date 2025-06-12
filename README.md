@@ -36,9 +36,49 @@ Pour maintenir le bot actif 24/7, utilisez **UptimeRobot** :
 
 Une fois le bot en ligne, utilisez la commande `/call` dans votre serveur Discord :
 
+### 🎯 Nouvelle version améliorée avec choix prédéfinis
+
+**Exemple basique (1 TP, 1 SL) :**
 ```
-/call symbol:BTCUSDT direction:Long entry:68420 stop:69000 tp:67000-65000 rr:2.5 reasoning:"Double top + divergences"
+/call symbol:BTCUSDT direction:📈 Long entry:68420 sl1:69000 tp1:67000
 ```
+
+**Exemple avec multiples TP/SL :**
+```
+/call symbol:ETHUSDT direction:📉 Short entry:3500 sl1:3550 sl2:3600 tp1:3400 tp2:3300 tp3:3200 rr:2.5 reasoning:"Double top + divergences RSI"
+```
+
+### 🆕 Nouvelles fonctionnalités :
+
+- **Direction avec choix prédéfinis** : 📈 Long ou 📉 Short (plus besoin de taper manuellement)
+- **Multiples Stop Loss** : `sl1` (obligatoire) + `sl2` et `sl3` (optionnels)
+- **Multiples Take Profit** : `tp1` (obligatoire) + `tp2` et `tp3` (optionnels)
+- **Affichage amélioré** : Les TP et SL multiples s'affichent de manière structurée
+
+### 📋 Options disponibles :
+
+| Option | Type | Description | Obligatoire |
+|--------|------|-------------|-------------|
+| `symbol` | String | Symbole du trade (ex: BTCUSDT) | ✅ |
+| `direction` | Choix | 📈 Long ou 📉 Short | ✅ |
+| `entry` | String | Prix d'entrée | ✅ |
+| `sl1` | String | Stop Loss 1 | ✅ |
+| `sl2` | String | Stop Loss 2 | ❌ |
+| `sl3` | String | Stop Loss 3 | ❌ |
+| `tp1` | String | Take Profit 1 | ✅ |
+| `tp2` | String | Take Profit 2 | ❌ |
+| `tp3` | String | Take Profit 3 | ❌ |
+| `rr` | String | Risk/Reward ratio | ❌ |
+| `reasoning` | String | Analyse du trade | ❌ |
+| `chart` | Fichier | Image du graphique | ❌ |
+
+### 🎨 Aperçu du rendu :
+
+Les trades s'affichent maintenant avec une structure claire :
+- **Entry Point** : Prix d'entrée
+- **Stop Loss** : SL1, SL2, SL3 (selon ce qui est rempli)
+- **Take Profits** : TP1, TP2, TP3 (selon ce qui est rempli)
+- **Couleurs dynamiques** : Vert pour Long, Rouge pour Short
 
 ## 🛠️ Développement local
 

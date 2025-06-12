@@ -79,3 +79,68 @@ Le bot génère de magnifiques embeds avec :
 
 ## 🔥 READY TO GO ! 
 Votre bot est **100% fonctionnel** avec Discord.js v13 et prêt pour Replit ! 🚀 
+
+## 🔄 Nouvelles fonctionnalités ajoutées (Mise à jour v2.0)
+
+### 🎯 Améliorations apportées :
+
+1. **Direction avec choix prédéfinis** :
+   - Plus besoin de taper "Long" ou "Short" manuellement
+   - Sélection dans un menu déroulant : 📈 Long ou 📉 Short
+
+2. **Multiples Stop Loss** :
+   - `sl1` : Stop Loss 1 (obligatoire)
+   - `sl2` : Stop Loss 2 (optionnel)
+   - `sl3` : Stop Loss 3 (optionnel)
+
+3. **Multiples Take Profit** :
+   - `tp1` : Take Profit 1 (obligatoire)  
+   - `tp2` : Take Profit 2 (optionnel)
+   - `tp3` : Take Profit 3 (optionnel)
+
+4. **Affichage amélioré** :
+   - Les TP et SL multiples s'affichent proprement dans l'embed
+   - Structure claire et lisible
+
+### 🚀 Comment mettre à jour votre bot :
+
+1. **Sur Replit** :
+   - Remplacez le contenu de `index.js` par la nouvelle version
+   - Remplacez le contenu de `refresh-commands.js` par la nouvelle version
+   - Redémarrez votre Repl
+
+2. **Rafraîchir les commandes Discord** :
+   ```bash
+   node refresh-commands.js
+   ```
+
+3. **Tester la nouvelle commande** :
+   ```
+   /call symbol:BTCUSDT direction:📈 Long entry:68420 sl1:69000 tp1:67000
+   ```
+
+### 🎯 Exemples d'utilisation v2.0 :
+
+**Trade simple (1 TP, 1 SL) :**
+```
+/call symbol:BTCUSDT direction:📈 Long entry:68420 sl1:69000 tp1:67000
+```
+
+**Trade complexe (3 TP, 2 SL) :**
+```
+/call symbol:ETHUSDT direction:📉 Short entry:3500 sl1:3550 sl2:3600 tp1:3400 tp2:3300 tp3:3200 rr:2.5 reasoning:"Double top confirmé"
+```
+
+### ⚠️ Changements importants :
+
+- L'ancienne option `stop` devient `sl1`
+- L'ancienne option `tp` devient `tp1`  
+- La direction est maintenant un choix dans un menu (plus de saisie libre)
+
+### ✅ Résultat attendu :
+
+Votre bot affichera maintenant des embeds plus professionnels avec :
+- Direction sélectionnée dans un menu déroulant
+- Stop Loss multiples affichés proprement
+- Take Profits multiples structurés
+- Même design élégant (vert/rouge selon la direction) 
