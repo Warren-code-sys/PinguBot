@@ -1,0 +1,17 @@
+{
+  "name": "@pingu/bot",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "bullmq": "^5.5.0",
+    "ioredis": "^5.3.2",
+    "@pingu/core": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts",
+    "dev": "tsx watch src/index.ts",
+    "test": "echo 'no tests'"
+  }
+}
