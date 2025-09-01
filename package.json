@@ -1,24 +1,21 @@
 {
-  "name": "pingubot",
-  "version": "1.0.0",
-  "description": "Bot Discord pour signaux de trading",
-  "main": "index.js",
+  "name": "pingu-trade-monitor",
+  "private": true,
+  "packageManager": "pnpm@10.11.0",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
-  },
-  "dependencies": {
-    "discord.js": "^13.17.1",
-    "@discordjs/builders": "^0.16.0",
-    "@discordjs/rest": "^0.5.0",
-    "discord-api-types": "^0.33.5",
-    "dotenv": "^16.0.3",
-    "express": "^4.18.2"
+    "dev": "docker compose -f infra/docker-compose.yml up -d && pnpm prisma migrate deploy && pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "lint": "eslint .",
+    "test": "pnpm -r --if-present test",
+    "mock:pingu": "tsx scripts/mock-pingu.ts"
   },
   "devDependencies": {
-    "nodemon": "^2.0.20"
-  },
-  "keywords": ["discord", "bot", "trading", "signals"],
-  "author": "Warren",
-  "license": "MIT"
-} 
+    "typescript": "^5.4.0",
+    "tsx": "^4.7.0",
+    "tsup": "^7.2.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "vitest": "^1.5.0",
+    "supertest": "^6.3.3"
+  }
+}

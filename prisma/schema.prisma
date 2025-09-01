@@ -1,0 +1,78 @@
+generator client { provider = "prisma-client-js" }
+
+datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
+
+enum CallStatus { PENDING_ENTRY ACTIVE PARTIALLY_CLOSED CLOSED CANCELLED }
+enum Side { LONG SHORT }
+
+model User {
+  id         Int      @id @default(autoincrement())
+  discordId  String   @unique
+  username   String?
+  roles      String[]
+  addresses  Address[]
+  calls      Call[]
+  metrics    MetricsDaily[]
+  createdAt  DateTime @default(now())
+}
+
+model Address {
+  id         Int      @id @default(autoincrement())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int
+  address    String   @unique
+  verified   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model Call {
+  id                 String     @id @default(uuid())
+  user               User       @relation(fields: [userId], references: [id])
+  userId             Int
+  address            String
+  symbol             String
+  side               Side
+  status             CallStatus @default(PENDING_ENTRY)
+  entryType          String?
+  entryPricePlanned  Decimal?
+  entryPriceFilled   Decimal?
+  sizeUsd            Decimal?
+  leverage           Decimal?
+  stopLoss           Decimal?
+  breakevenAfterTp   Int?
+  notes              String?
+  createdAt          DateTime   @default(now())
+  takeProfits        TakeProfit[]
+  events             Event[]
+}
+
+model TakeProfit {
+  id            Int     @id @default(autoincrement())
+  call          Call    @relation(fields: [callId], references: [id])
+  callId        String
+  tpIndex       Int
+  price         Decimal
+  percentClose  Decimal // 0..100
+}
+
+model Event {
+  id        BigInt   @id @default(autoincrement())
+  call      Call     @relation(fields: [callId], references: [id])
+  callId    String
+  type      String   // ENTRY_FILLED, TP_HIT, SL_HIT, BE_HIT, CLOSE, ADJUST, RISK_ALERT
+  payload   Json
+  createdAt DateTime @default(now())
+  @@index([callId, type, createdAt])
+}
+
+model MetricsDaily {
+  id           BigInt   @id @default(autoincrement())
+  user         User     @relation(fields: [userId], references: [id])
+  userId       Int
+  date         DateTime
+  pnlRealized  Decimal  @default(0)
+  pnlUnreal    Decimal  @default(0)
+  fees         Decimal  @default(0)
+  funding      Decimal  @default(0)
+  trades       Int      @default(0)
+}
